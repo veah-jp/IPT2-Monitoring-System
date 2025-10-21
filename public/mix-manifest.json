@@ -1,0 +1,11 @@
+{
+    "/js/app.js": "/js/app.js",
+    "/js/login.js": "/js/login.js",
+    "/js/sidebar.js": "/js/sidebar.js",
+    "/js/students.js": "/js/students.js",
+    "/js/faculty.js": "/js/faculty.js",
+    "/js/dashboard.js": "/js/dashboard.js",
+    "/css/dashboard.css": "/css/dashboard.css",
+    "/css/login.css": "/css/login.css",
+    "/css/app.css": "/css/app.css"
+}

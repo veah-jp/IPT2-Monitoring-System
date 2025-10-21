@@ -1,0 +1,58 @@
+{
+  // Reduce background file watching and searching
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/vendor/**": true,
+    "**/storage/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.git/**": true,
+    "**/.cache/**": true
+  },
+  "search.exclude": {
+    "**/node_modules/**": true,
+    "**/vendor/**": true,
+    "**/storage/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.git/**": true,
+    "**/.cache/**": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/vendor": true,
+    "**/storage": true,
+    "**/dist": true,
+    "**/build": true
+  },
+
+  // Tame TypeScript/JavaScript services
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.useSeparateSyntaxServer": true,
+  "typescript.tsserver.maxTsServerMemory": 2048,
+  "typescript.tsserver.log": "off",
+  "javascript.suggest.completeFunctionCalls": false,
+
+  // Disable heavy on-save work
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {},
+
+  // ESLint can keep node processes alive; disable per-workspace if not needed
+  "eslint.enable": false,
+
+  // Git background activity can be chatty on large repos
+  "git.autorefresh": false,
+  "git.pruneOnFetch": false,
+
+  // UI/Rendering tweaks for lower resource usage
+  "window.enableGpu": false,
+  "workbench.tree.indent": 10,
+  "editor.hover.enabled": false,
+  "breadcrumbs.enabled": false,
+
+  // Telemetry off
+  "telemetry.telemetryLevel": "off"
+}
+
+
