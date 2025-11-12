@@ -173,7 +173,7 @@
 
         @if($students->count() > 0)
             <div class="d-flex justify-content-center mt-4">
-                {{ $students->links() }}
+                {{ $students->onEachSide(0)->links('vendor.pagination.simple-bootstrap-4') }}
             </div>
         @endif
 

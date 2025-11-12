@@ -7,7 +7,8 @@ module.exports = {
         'react-students': './resources/js/react/students.jsx',
         'react-faculty': './resources/js/react/faculty.jsx',
         'react-settings': './resources/js/react/settings.jsx',
-        'react-account': './resources/js/react/account.jsx'
+        'react-account': './resources/js/react/account.jsx',
+        'react-reports': './resources/js/react/reports.jsx'
     },
     output: {
         path: path.resolve(__dirname, 'public/js'),

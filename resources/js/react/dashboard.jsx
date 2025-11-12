@@ -38,6 +38,17 @@ const DashboardApp = () => {
   const [totals, setTotals] = useState({ students: 0, faculty: 0 });
   const [departments, setDepartments] = useState([]);
   const [departmentId, setDepartmentId] = useState('');
+
+  // Hide Bootstrap caret on dropdowns (global)
+  useEffect(() => {
+    const styleId = 'global-hide-dropdown-caret';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `.dropdown-toggle::after{display:none !important;}`;
+      document.head.appendChild(style);
+    }
+  }, []);
   const [coursesData, setCoursesData] = useState([]);
   const [facultyByDept, setFacultyByDept] = useState([]);
 
@@ -278,7 +289,6 @@ const DashboardApp = () => {
                   fontWeight: 'bold'
                 }}>J</div>
                 <span className="fw-medium">Jerremae</span>
-                <i className="fas fa-chevron-down" style={{ fontSize: '12px' }}></i>
               </button>
                              <ul className="dropdown-menu dropdown-menu-end" style={{
                  border: 'none',
@@ -295,39 +305,6 @@ const DashboardApp = () => {
                  overflow: 'hidden',
                  transform: 'translateY(0)'
                }}>
-                 <li>
-                   <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/profile" style={{ 
-                     borderRadius: '12px',
-
-                     position: 'relative',
-                     overflow: 'hidden'
-                   }}>
-                     <div>
-                       <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Profile</div>
-                       <small className="text-muted" style={{ fontSize: '12px' }}>View your account</small>
-                     </div>
-                   </a>
-                 </li>
-                 <li>
-                   <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/settings" style={{ 
-                     borderRadius: '12px',
-
-                     position: 'relative',
-                     overflow: 'hidden'
-                   }}>
-                     <div>
-                       <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Settings</div>
-                       <small className="text-muted" style={{ fontSize: '12px' }}>Manage preferences</small>
-                     </div>
-                   </a>
-                 </li>
-                 <li>
-                   <div style={{
-                     height: '1px',
-                     background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent)',
-                     margin: '8px 12px'
-                   }}></div>
-                 </li>
                  <li>
                    <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/logout" style={{ 
                      borderRadius: '12px',

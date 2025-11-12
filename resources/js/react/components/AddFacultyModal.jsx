@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const DUPLICATE_ERROR_MESSAGE = 'This faculty member already exists.';
+
 const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
     const [formData, setFormData] = useState({
         first_name: '',
@@ -15,6 +17,7 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [existingFaculty, setExistingFaculty] = useState([]);
 
     // Load departments on component mount
     useEffect(() => {
@@ -25,6 +28,7 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
     useEffect(() => {
         if (isOpen) {
             resetForm();
+            loadExistingFaculty(true);
         }
     }, [isOpen]);
 
@@ -42,29 +46,135 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
         }
     };
 
+    const loadExistingFaculty = async (force = false) => {
+        try {
+            if (!force && existingFaculty.length > 0) {
+                return existingFaculty;
+            }
+
+            const response = await fetch('/api/faculty');
+            if (!response.ok) {
+                throw new Error(`Failed to load faculty: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const normalized = Array.isArray(data)
+                ? data
+                    .filter(member => member && (member.is_active === null || member.is_active === undefined || member.is_active === 1))
+                    .map(member => ({
+                        first_name: (member.first_name || '').trim(),
+                        last_name: (member.last_name || '').trim()
+                    }))
+                : [];
+
+            setExistingFaculty(normalized);
+            return normalized;
+        } catch (error) {
+            console.error('Error loading existing faculty:', error);
+            return existingFaculty;
+        }
+    };
+
+    const isDuplicateFaculty = (firstName, lastName, facultyList = existingFaculty) => {
+        if (!firstName || !lastName) {
+            return false;
+        }
+
+        const normalizedFirst = firstName.trim().toLowerCase();
+        const normalizedLast = lastName.trim().toLowerCase();
+
+        if (!normalizedFirst || !normalizedLast) {
+            return false;
+        }
+
+        return facultyList.some(member => {
+            const memberFirst = (member.first_name || '').trim().toLowerCase();
+            const memberLast = (member.last_name || '').trim().toLowerCase();
+            return memberFirst === normalizedFirst && memberLast === normalizedLast;
+        });
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+
         setFormData(prev => ({
             ...prev,
             [name]: value
         }));
 
-        // Clear error for this field
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
+        if ((name === 'first_name' || name === 'last_name') && existingFaculty.length === 0) {
+            loadExistingFaculty();
         }
+
+        const nextFirstName = name === 'first_name' ? value : formData.first_name;
+        const nextLastName = name === 'last_name' ? value : formData.last_name;
+        const duplicate = isDuplicateFaculty(nextFirstName, nextLastName);
+
+        setErrors(prev => {
+            const updated = { ...prev };
+
+            if (name === 'first_name' && updated.first_name && updated.first_name !== DUPLICATE_ERROR_MESSAGE) {
+                delete updated.first_name;
+            }
+
+            if (name === 'last_name' && updated.last_name && updated.last_name !== DUPLICATE_ERROR_MESSAGE) {
+                delete updated.last_name;
+            }
+
+            if (name === 'gender' && updated.gender) {
+                delete updated.gender;
+            }
+
+            if (name === 'date_of_birth' && updated.date_of_birth) {
+                delete updated.date_of_birth;
+            }
+
+            if (name === 'email' && updated.email && updated.email !== DUPLICATE_ERROR_MESSAGE) {
+                delete updated.email;
+            }
+
+            if (name === 'phone' && updated.phone) {
+                delete updated.phone;
+            }
+
+            if (name === 'department_id' && updated.department_id) {
+                delete updated.department_id;
+            }
+
+            if (name === 'hire_date' && updated.hire_date) {
+                delete updated.hire_date;
+            }
+
+            if (duplicate) {
+                updated.first_name = DUPLICATE_ERROR_MESSAGE;
+                updated.last_name = DUPLICATE_ERROR_MESSAGE;
+            } else {
+                if (updated.first_name === DUPLICATE_ERROR_MESSAGE) {
+                    delete updated.first_name;
+                }
+                if (updated.last_name === DUPLICATE_ERROR_MESSAGE) {
+                    delete updated.last_name;
+                }
+            }
+
+            return updated;
+        });
     };
 
-    const validateForm = () => {
+    const validateForm = (facultyList = existingFaculty) => {
         const newErrors = {};
 
         if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
         if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
         if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Please enter a valid email address';
+        }
+
+        if (!newErrors.first_name && !newErrors.last_name) {
+            if (isDuplicateFaculty(formData.first_name, formData.last_name, facultyList)) {
+                newErrors.first_name = DUPLICATE_ERROR_MESSAGE;
+                newErrors.last_name = DUPLICATE_ERROR_MESSAGE;
+            }
         }
 
         setErrors(newErrors);
@@ -74,7 +184,9 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!validateForm()) {
+        const facultyList = existingFaculty.length > 0 ? existingFaculty : await loadExistingFaculty();
+
+        if (!validateForm(facultyList)) {
             return;
         }
 
@@ -149,6 +261,16 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
         }, 5000);
     };
 
+    const handleClose = () => {
+        if (loading) return;
+        if (onClose) {
+            onClose();
+        }
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -163,7 +285,7 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
                         <button 
                             type="button" 
                             className="btn-close btn-close-white" 
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={loading}
                         ></button>
                     </div>
@@ -351,7 +473,7 @@ const AddFacultyModal = ({ isOpen, onClose, onFacultyAdded }) => {
                             <button 
                                 type="button" 
                                 className="btn btn-secondary btn-lg" 
-                                onClick={onClose}
+                                onClick={handleClose}
                                 disabled={loading}
                             >
                                 <i className="fas fa-times me-2"></i>

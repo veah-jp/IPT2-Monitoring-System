@@ -5,6 +5,17 @@ import Sidebar from './shared/Sidebar.jsx';
 function AccountLayout() {
   const [moved, setMoved] = useState(false);
 
+  // Hide Bootstrap caret on dropdowns (global)
+  useEffect(() => {
+    const styleId = 'global-hide-dropdown-caret';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `.dropdown-toggle::after{display:none !important;}`;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   // Move legacy account content into the React slot and tweak styles
   useEffect(() => {
     const slot = document.getElementById('react-account-slot');
@@ -26,6 +37,33 @@ function AccountLayout() {
       setMoved(true);
     }
   }, [moved]);
+
+  // Manual dropdown toggle since Bootstrap isn't working in React context
+  useEffect(() => {
+    const btn = document.querySelector('.dropdown .btn.dropdown-toggle');
+    const menu = document.querySelector('.dropdown .dropdown-menu');
+    if (!btn || !menu) return;
+
+    const handleClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      menu.classList.toggle('show');
+    };
+
+    const handleOutside = (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('show');
+      }
+    };
+
+    btn.addEventListener('click', handleClick);
+    document.addEventListener('click', handleOutside);
+
+    return () => {
+      btn.removeEventListener('click', handleClick);
+      document.removeEventListener('click', handleOutside);
+    };
+  }, []);
 
   // Replicate account.js functionality when legacy script is not present
   useEffect(() => {
@@ -250,6 +288,57 @@ function AccountLayout() {
                 <small className="text-white-50" style={{ fontSize: '14px' }}>Manage your profile and password</small>
               </div>
             </div>
+            <div className="dropdown">
+              <button className="btn dropdown-toggle d-flex align-items-center gap-3" type="button" data-bs-toggle="dropdown" aria-label="User menu" style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '12px',
+                padding: '12px 20px',
+                color: 'white',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>J</div>
+                <span className="fw-medium">Jerremae</span>
+              </button>
+              <ul className="dropdown-menu dropdown-menu-end" style={{
+                border: 'none',
+                borderRadius: '20px',
+                boxShadow: '0 30px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.3), inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.1)',
+                padding: '12px',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.9) 100%)',
+                backdropFilter: 'blur(30px) saturate(1.5) brightness(1.1)',
+                minWidth: '180px',
+                width: '180px',
+                marginTop: '12px',
+                position: 'relative',
+                overflow: 'hidden',
+                transform: 'translateY(0)'
+              }}>
+                <li>
+                  <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/logout" style={{
+                    borderRadius: '12px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <div>
+                      <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Logout</div>
+                      <small className="text-muted" style={{ fontSize: '12px' }}>Sign out safely</small>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </header>
         <div className="p-4" style={{ maxWidth: 'min(1600px, calc(100vw - 48px))', width: '100%', margin: '0 auto' }}>
@@ -272,6 +361,8 @@ function AccountLayout() {
   );
 }
 
+let accountRoot = null;
+
 export function mountAccount() {
   let container = document.getElementById('react-layout-root');
   if (!container) {
@@ -279,7 +370,18 @@ export function mountAccount() {
     container.id = 'react-layout-root';
     document.body.prepend(container);
   }
-  ReactDOM.render(<AccountLayout />, container);
+  
+  // Use React 19's createRoot if available, otherwise fall back to legacy render
+  if (!accountRoot) {
+    if (ReactDOM.createRoot) {
+      accountRoot = ReactDOM.createRoot(container);
+      accountRoot.render(<AccountLayout />);
+    } else {
+      ReactDOM.render(<AccountLayout />, container);
+    }
+  } else {
+    accountRoot.render(<AccountLayout />);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', mountAccount);

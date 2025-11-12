@@ -52,6 +52,11 @@
         .editing-row:hover {
             box-shadow: 0 0 20px rgba(33, 150, 243, 0.5) !important;
         }
+
+        /* Hide large arrow icons in pagination */
+        .pagination .page-link svg {
+            display: none !important;
+        }
     </style>
 </head>
 <body>

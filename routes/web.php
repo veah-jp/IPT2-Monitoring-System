@@ -50,7 +50,12 @@ Route::middleware(['auth'])->group(function () {
     })->name('account.react');
     
     // Reports route
-    Route::get('/reports', [MonitoringController::class, 'reports'])->name('reports');
+    Route::get('/reports', function () {
+        return redirect('/reports-react');
+    })->name('reports');
+    Route::get('/reports-react', function () {
+        return view('monitoring.reports-react');
+    })->name('reports.react');
     
     // Reports API routes
     Route::post('/api/reports/data', [MonitoringController::class, 'getReportsData'])->name('api.reports.data');

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+const DUPLICATE_ERROR_MESSAGE = 'This student already exists.';
+
 const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
     const [formData, setFormData] = useState({
         first_name: '',
@@ -16,6 +18,7 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [existingStudents, setExistingStudents] = useState([]);
 
     // Load departments on component mount
     useEffect(() => {
@@ -26,6 +29,7 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
     useEffect(() => {
         if (isOpen) {
             resetForm();
+            loadExistingStudents(true);
         }
     }, [isOpen]);
 
@@ -64,33 +68,133 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const loadExistingStudents = async (force = false) => {
+        try {
+            if (!force && existingStudents.length > 0) {
+                return existingStudents;
+            }
 
-        // Clear error for this field
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
+            const response = await fetch('/api/students');
+            if (!response.ok) {
+                throw new Error(`Failed to load students: ${response.status}`);
+            }
 
-        // If department changes, load courses and reset course selection
-        if (name === 'department_id') {
-            setFormData(prev => ({
-                ...prev,
-                department_id: value,
-                course_id: '' // Reset course selection
-            }));
-            loadCourses(value);
+            const data = await response.json();
+            const normalized = Array.isArray(data)
+                ? data
+                    .filter(student => student && (student.is_active === null || student.is_active === undefined || student.is_active === 1))
+                    .map(student => ({
+                        first_name: (student.first_name || '').trim(),
+                        last_name: (student.last_name || '').trim()
+                    }))
+                : [];
+
+            setExistingStudents(normalized);
+            return normalized;
+        } catch (error) {
+            console.error('Error loading existing students:', error);
+            return existingStudents;
         }
     };
 
-    const validateForm = () => {
+    const isDuplicateStudent = (firstName, lastName, studentsList = existingStudents) => {
+        if (!firstName || !lastName) {
+            return false;
+        }
+
+        const normalizedFirst = firstName.trim().toLowerCase();
+        const normalizedLast = lastName.trim().toLowerCase();
+
+        if (!normalizedFirst || !normalizedLast) {
+            return false;
+        }
+
+        return studentsList.some(student => {
+            const studentFirst = (student.first_name || '').trim().toLowerCase();
+            const studentLast = (student.last_name || '').trim().toLowerCase();
+            return studentFirst === normalizedFirst && studentLast === normalizedLast;
+        });
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+
+        setFormData(prev => {
+            const updated = {
+                ...prev,
+                [name]: value
+            };
+
+            if (name === 'department_id') {
+                updated.department_id = value;
+                updated.course_id = '';
+            }
+
+            return updated;
+        });
+
+        if (name === 'department_id') {
+            loadCourses(value);
+        }
+
+        if ((name === 'first_name' || name === 'last_name') && existingStudents.length === 0) {
+            loadExistingStudents();
+        }
+
+        const nextFirstName = name === 'first_name' ? value : formData.first_name;
+        const nextLastName = name === 'last_name' ? value : formData.last_name;
+        const duplicate = isDuplicateStudent(nextFirstName, nextLastName);
+
+        setErrors(prev => {
+            const updated = { ...prev };
+
+            if (name === 'first_name' && updated.first_name && updated.first_name !== DUPLICATE_ERROR_MESSAGE) {
+                delete updated.first_name;
+            }
+            if (name === 'last_name' && updated.last_name && updated.last_name !== DUPLICATE_ERROR_MESSAGE) {
+                delete updated.last_name;
+            }
+            if (name === 'gender' && updated.gender) {
+                delete updated.gender;
+            }
+            if (name === 'date_of_birth' && updated.date_of_birth) {
+                delete updated.date_of_birth;
+            }
+            if (name === 'address' && updated.address) {
+                delete updated.address;
+            }
+            if (name === 'department_id') {
+                if (updated.department_id) {
+                    delete updated.department_id;
+                }
+                if (updated.course_id && updated.course_id !== DUPLICATE_ERROR_MESSAGE) {
+                    delete updated.course_id;
+                }
+            }
+            if (name === 'course_id' && updated.course_id) {
+                delete updated.course_id;
+            }
+            if (name === 'year' && updated.year) {
+                delete updated.year;
+            }
+
+            if (duplicate) {
+                updated.first_name = DUPLICATE_ERROR_MESSAGE;
+                updated.last_name = DUPLICATE_ERROR_MESSAGE;
+            } else {
+                if (updated.first_name === DUPLICATE_ERROR_MESSAGE) {
+                    delete updated.first_name;
+                }
+                if (updated.last_name === DUPLICATE_ERROR_MESSAGE) {
+                    delete updated.last_name;
+                }
+            }
+
+            return updated;
+        });
+    };
+
+    const validateForm = (studentsList = existingStudents) => {
         const newErrors = {};
 
         if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
@@ -102,6 +206,13 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
         if (!formData.course_id) newErrors.course_id = 'Course is required';
         if (!formData.year) newErrors.year = 'Year is required';
 
+        if (!newErrors.first_name && !newErrors.last_name) {
+            if (isDuplicateStudent(formData.first_name, formData.last_name, studentsList)) {
+                newErrors.first_name = DUPLICATE_ERROR_MESSAGE;
+                newErrors.last_name = DUPLICATE_ERROR_MESSAGE;
+            }
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -109,7 +220,9 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!validateForm()) {
+        const studentsList = existingStudents.length > 0 ? existingStudents : await loadExistingStudents();
+        
+        if (!validateForm(studentsList)) {
             return;
         }
 
@@ -185,6 +298,16 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
         }, 5000);
     };
 
+    const handleClose = () => {
+        if (loading) return;
+        if (onClose) {
+            onClose();
+        }
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -199,7 +322,7 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
                         <button 
                             type="button" 
                             className="btn-close btn-close-white" 
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={loading}
                         ></button>
                     </div>
@@ -400,7 +523,7 @@ const AddStudentModal = ({ isOpen, onClose, onStudentAdded }) => {
                             <button 
                                 type="button" 
                                 className="btn btn-secondary btn-lg" 
-                                onClick={onClose}
+                                onClick={handleClose}
                                 disabled={loading}
                             >
                                 <i className="fas fa-times me-2"></i>

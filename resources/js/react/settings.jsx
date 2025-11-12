@@ -5,6 +5,17 @@ import Sidebar from './shared/Sidebar.jsx';
 function SettingsLayout() {
   const [moved, setMoved] = useState(false);
 
+  // Hide Bootstrap caret on dropdowns (global)
+  useEffect(() => {
+    const styleId = 'global-hide-dropdown-caret';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `.dropdown-toggle::after{display:none !important;}`;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   useEffect(() => {
     const wrapper = document.getElementById('settings-content-wrapper');
     const container = document.getElementById('react-settings-slot');
@@ -98,7 +109,6 @@ function SettingsLayout() {
                   fontSize: '14px', fontWeight: 'bold'
                 }}>J</div>
                 <span className="fw-medium">Jerremae</span>
-                <i className="fas fa-chevron-down" style={{ fontSize: '12px' }}></i>
               </button>
               <ul id="profile-dropdown-menu" className="dropdown-menu dropdown-menu-end" style={{
                 border: 'none', borderRadius: '20px', boxShadow: '0 30px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.3), inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,0,0,0.1)',
@@ -106,25 +116,6 @@ function SettingsLayout() {
                 backdropFilter: 'blur(30px) saturate(1.5) brightness(1.1)',
                 minWidth: '180px', width: '180px', marginTop: '12px', position: 'absolute', right: 0
               }}>
-                <li>
-                  <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/profile" style={{ borderRadius: '12px' }}>
-                    <div>
-                      <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Profile</div>
-                      <small className="text-muted" style={{ fontSize: '12px' }}>View your account</small>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/settings" style={{ borderRadius: '12px' }}>
-                    <div>
-                      <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Settings</div>
-                      <small className="text-muted" style={{ fontSize: '12px' }}>Manage preferences</small>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent)', margin: '8px 12px' }}></div>
-                </li>
                 <li>
                   <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/logout" style={{ borderRadius: '12px' }}>
                     <div>

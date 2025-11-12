@@ -190,11 +190,24 @@ function StudentsLayout() {
   useEffect(() => {
     const prevBodyOverflowX = document.body.style.overflowX;
     const prevHtmlOverflowX = document.documentElement.style.overflowX;
+    const prevBodyTouchAction = document.body.style.touchAction;
+    const prevHtmlTouchAction = document.documentElement.style.touchAction;
+    const prevBodyOverscrollX = document.body.style.overscrollBehaviorX;
+    const prevHtmlOverscrollX = document.documentElement.style.overscrollBehaviorX;
     document.body.style.overflowX = 'hidden';
     document.documentElement.style.overflowX = 'hidden';
+    // Disable horizontal swipe/back gesture overlays
+    document.body.style.touchAction = 'pan-y';
+    document.documentElement.style.touchAction = 'pan-y';
+    document.body.style.overscrollBehaviorX = 'none';
+    document.documentElement.style.overscrollBehaviorX = 'none';
     return () => {
       document.body.style.overflowX = prevBodyOverflowX;
       document.documentElement.style.overflowX = prevHtmlOverflowX;
+      document.body.style.touchAction = prevBodyTouchAction;
+      document.documentElement.style.touchAction = prevHtmlTouchAction;
+      document.body.style.overscrollBehaviorX = prevBodyOverscrollX;
+      document.documentElement.style.overscrollBehaviorX = prevHtmlOverscrollX;
     };
   }, []);
 
@@ -230,6 +243,14 @@ function StudentsLayout() {
           border-radius: 9999px !important;
           font-size: 12px !important;
           line-height: 1.1 !important;
+        }
+        /* Hide chevron SVG arrows in paginator on Students page */
+        #students-content-container nav[role='navigation'] svg {
+          display: none !important;
+        }
+        /* Hide bootstrap caret on dropdown toggle */
+        .dropdown-toggle::after {
+          display: none !important;
         }
       `;
       document.head.appendChild(style);
@@ -298,7 +319,6 @@ function StudentsLayout() {
                   fontWeight: 'bold'
                 }}>J</div>
                 <span className="fw-medium">Jerremae</span>
-                <i className="fas fa-chevron-down" style={{ fontSize: '12px' }}></i>
               </button>
               <ul className="dropdown-menu dropdown-menu-end" style={{
                 border: 'none',
@@ -314,37 +334,6 @@ function StudentsLayout() {
                 overflow: 'hidden',
                 transform: 'translateY(0)'
               }}>
-                <li>
-                  <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/profile" style={{ 
-                    borderRadius: '12px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div>
-                      <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Profile</div>
-                      <small className="text-muted" style={{ fontSize: '12px' }}>View your account</small>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/settings" style={{ 
-                    borderRadius: '12px',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div>
-                      <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>Settings</div>
-                      <small className="text-muted" style={{ fontSize: '12px' }}>Manage preferences</small>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <div style={{
-                    height: '1px',
-                    background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent)',
-                    margin: '8px 12px'
-                  }}></div>
-                </li>
                 <li>
                   <a className="dropdown-item d-flex align-items-center py-3 px-3" href="/logout" style={{ 
                     borderRadius: '12px',

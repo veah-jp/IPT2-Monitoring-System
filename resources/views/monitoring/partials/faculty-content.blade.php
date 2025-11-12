@@ -1,7 +1,7 @@
 <style>
 /* Faculty table responsive styling */
 .table-responsive {
-    overflow-x: visible; /* allow page-level horizontal scroll */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -194,7 +194,7 @@
 
     <!-- Pagination -->
     <div class="d-flex justify-content-center mt-4">
-        {{ $faculty->links() }}
+        {{ $faculty->onEachSide(0)->links('vendor.pagination.simple-bootstrap-4') }}
     </div>
 @else
     <div class="text-center py-5">

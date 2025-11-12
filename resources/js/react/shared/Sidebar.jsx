@@ -118,16 +118,17 @@ export default function Sidebar({ active = 'dashboard', width = 280 }) {
             style={{
               width: '45px',
               height: '45px',
-              background: 'linear-gradient(135deg, #10b981, #059669)',
+              background: 'white',
               borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginRight: isCollapsed ? '0' : '12px',
               boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
+              padding: '5px',
             }}
           >
-            <i className="fas fa-graduation-cap text-white" style={{ fontSize: '20px' }}></i>
+            <img src="/Father_Saturnino_Urios_University_logo.png" alt="FSUU Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           {!isCollapsed && (
             <div>
@@ -244,7 +245,7 @@ export default function Sidebar({ active = 'dashboard', width = 280 }) {
           </a>
 
           <a
-            href="/faculty"
+            href="/faculty-react"
             className={`nav-link text-white position-relative ${active === 'faculty' ? 'active' : ''}`}
             style={{
               background:
@@ -292,7 +293,7 @@ export default function Sidebar({ active = 'dashboard', width = 280 }) {
           </a>
 
           <a
-            href="/reports"
+            href="/reports-react"
             className={`nav-link text-white position-relative ${active === 'reports' ? 'active' : ''}`}
             style={{
               background:
